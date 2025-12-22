@@ -758,9 +758,32 @@ func:write_data = result<void>(data: array<byte>, file: wild FILE*) {
 
 **Document Version**: 1.0  
 **Author**: Aria Ecosystem Documentation  
-**Status**: Design specification (implementation pending Gemini research on FFI design and memory safety across boundaries)
+**Status**: Design specification (research complete, implementation ready)
 
-**Pending Research** (from Gemini tasks):
-- FFI design for C interop, especially Nikola integration (language_advanced_research_task.txt)
-- Memory safety across FFI boundaries
-- Ownership tracking for foreign pointers
+**Research Complete** ✅ (December 22, 2025):
+- **FFI design for C interop**: Standard C ABI mapping, zero-cost primitives
+- **Memory safety**: Pinning operator (#) for GC objects passed to C
+- **Ownership tracking**: Appendage Theory enforces Host outlives Appendage
+- **TBB preservation**: Sticky error propagation across FFI boundary
+- **Type mapping**: Aria types → LLVM IR → C ABI deterministic mapping
+- **Result pattern**: AriaResult struct allocated on heap, caller frees
+
+**Key Findings** (from language_advanced_research_task.txt):
+- **Type Mapping Table**:
+  * int8/tbb8 → i8 → int8_t (1 byte)
+  * int64 → i64 → int64_t (8 bytes)
+  * int128 → i128 → __int128 (16 bytes, x86-64 supported)
+  * wild byte* → i8* → uint8_t* (8 bytes, raw pointer)
+  * result<T> → {i8*, T} → AriaResult* (heap-allocated struct)
+- **TBB Sticky Errors**: C code must check for sentinel (e.g., -128 for tbb8)
+- **Runtime intrinsics**: tbb8_add, tbb8_mul for C consumers
+- **Pinning**: # operator sets bit in object header, prevents GC movement
+- **Borrow checker**: Validates pointers to C derived from pinned references
+- **W^X safety**: aria_mem_protect_exec transitions wildx from Write to Execute
+
+**FFI Safety Rules**:
+1. Wild pointers: zero-cost, manual management (map directly to C pointers)
+2. GC pointers: require pinning (#) before passing to C
+3. Result<T>: caller must call aria_result_free() to prevent leaks
+4. TBB types: C code must preserve sentinel semantics or use intrinsics
+5. Extern blocks: manual symbol declaration, resolved at link time

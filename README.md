@@ -38,6 +38,11 @@
 - ✅ [DAP_COMPILER.md](integration/DAP_COMPILER.md) - DWARF debug info generation, source line mapping, type formatters (Result<T>/TBB/streams)
 - ✅ [NIKOLA_ARIA.md](integration/NIKOLA_ARIA.md) - Consciousness substrate FFI bindings, C wrapper, 6-stream wave data, use cases
 
+### Programming Guide
+- 📝 [Programming Guide](programming_guide/README.md) - Comprehensive reference for every Aria language feature (302 topics)
+  - **Structure Complete**: Types, Memory Model, Control Flow, Operators, Functions, Modules, I/O, Standard Library, Advanced Features
+  - **Content Status**: Files created, content to be filled incrementally during development
+
 ---
 
 ## Quick Reference

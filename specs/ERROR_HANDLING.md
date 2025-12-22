@@ -632,9 +632,26 @@ if (r.is_ok()) {
 
 **Document Version**: 1.0  
 **Author**: Aria Ecosystem Documentation  
-**Status**: Core specification (Result<T> implementation in progress, TBB future work)
+**Status**: Core specification (research complete, Result<T> implementation in progress)
 
-**Pending Research**:
-- Result<T> monad implementation strategies (Gemini task: `language_core_research_task.txt`)
-- TBB verification techniques (Gemini task: `language_core_research_task.txt`)
-- Error message formatting standards
+**Research Complete** ✅ (December 22, 2025):
+- **Result<T> monad**: Two-field struct (err: error code or NULL, val: value or NULL)
+- **TBB verification**: Sticky error propagation via sentinel checks + overflow detection
+- **Error Sinks**: Comparison operators transition from TBB domain to Boolean domain
+- **Unwrap operator (?)**: Syntactic sugar for error checking with default values
+
+**Key Findings** (from language_core_research_task.txt):
+- **TBB Sticky Propagation**: ERR + 1 = ERR, errors absorb all operations
+- **TBBLowerer logic**: Sentinel check → Arithmetic → Result validation → Selection
+- **Error Sinks**: `val == ERR` returns clean boolean, forces explicit handling
+- **Result structure**: Likely `struct { i8 err, [padding], T val }`
+- **Optimized return**: Fits in registers (System V ABI), zero-cost vs exceptions
+- **Auto-wrapping**: currentFunctionReturnType + currentFunctionAutoWrap
+- **Sentinel values**: tbb8=-128, tbb16=-32768, tbb32=0x80000000, tbb64=INT64_MIN
+- **Propagation algebra**: ERR is absorbing element in arithmetic
+
+**Implementation Notes**:
+- exprTypeMap tracks whether LLVM Value* is TBB type ("critical for TBB safety")
+- Every arithmetic op on TBB injects check-and-propagate sequence
+- Comparison ops are transition points where errors must be handled
+- `?` operator provides ergonomic error handling without verbosity

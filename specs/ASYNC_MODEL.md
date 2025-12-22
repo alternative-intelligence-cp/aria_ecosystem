@@ -587,10 +587,28 @@ async func:fetch_with_timeout = result<string>(url: string, timeout_ms: i32) {
 
 **Document Version**: 1.0  
 **Author**: Aria Ecosystem Documentation  
-**Status**: Design specification (implementation pending Gemini research on async/await semantics and Future/Promise runtime mapping)
+**Status**: Design specification (research complete, implementation ready)
 
-**Pending Research** (from Gemini tasks):
-- Async/await syntax and semantics (language_advanced_research_task.txt)
-- Future/Promise implementation strategies
-- Task scheduler optimizations
-- Integration with ownership/lifetime system
+**Research Complete** ✅ (December 22, 2025):
+- **Async/await syntax and semantics**: Stackless coroutines via LLVM intrinsics
+- **Future/Promise implementation**: RAMP optimization (Resource Allocation for Minimal Pause)
+- **Task scheduler**: Work-stealing scheduler with Chase-Lev deque
+- **Coroutine lowering**: State reification, intrinsic injection (llvm.coro.*), function splitting
+- **RAMP mechanism**: Optimistic stack execution, heap promotion only on true suspension
+- **Scheduler architecture**: M:N threading, per-worker deques, LIFO owner + FIFO thieves
+- **Wild Affinity**: Thread pinning for tasks with wild memory allocations
+- **Event loop integration**: epoll (Linux), kqueue (macOS), IOCP (Windows)
+
+**Key Findings** (from language_advanced_research_task.txt):
+- Stackless coroutines compile to compact state machines (heap allocation only when suspended)
+- RAMP reduces allocator pressure for synchronous completions (e.g., buffered reads)
+- Work-stealing balances load: local LIFO for cache locality, remote FIFO for fairness
+- Wild Affinity prevents race conditions with thread-local wild memory
+- Coroutine frame structure: state index + promise object + spilled variables
+- Zero-cost abstraction: no heap allocation for synchronous paths
+
+**Implementation Specifications**:
+- CoroutineFrame allocation: via aria_alloc_aligned (heap)
+- RampResult union: direct value (fast) OR coroutine handle (slow)
+- Scheduler API: aria_async(task_fn, arg), aria_await(future)
+- Event loop multiplexing: platform-specific I/O completion notifications

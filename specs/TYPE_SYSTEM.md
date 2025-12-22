@@ -743,9 +743,21 @@ func:main = i64() {
 
 **Document Version**: 1.0  
 **Author**: Aria Ecosystem Documentation  
-**Status**: Core specification (partial implementation, TBB in progress)
+**Status**: Core specification (research complete, implementation in progress)
 
-**Pending Research**:
-- Generic monomorphization vs type erasure (Gemini task: `language_core_research_task.txt`)
-- Type inference rules & limitations (Gemini task: `language_core_research_task.txt`)
-- Ownership & lifetime tracking (Gemini task: `language_core_research_task.txt`)
+**Research Complete** ✅ (December 22, 2025):
+- **Generic monomorphization**: Creates specialized copy for each concrete type
+- **Type inference**: Contextual deduction, getLLVMType recursive substitution
+- **Ownership tracking**: Appendage Theory (Host/Appendage model)
+- **Type substitution**: typeSubstitution map (T → int8)
+- **Name mangling**: Unique symbols per specialization (vector_int8_push vs vector_float_push)
+
+**Key Findings** (from language_core_research_task.txt & language_advanced_research_task.txt):
+- **Monomorphization**: Zero runtime overhead, LLVM optimizer can inline per-type specializations
+- **CodeGenContext**: Maintains typeSubstitution map + currentMangledName for generics
+- **Type tracking**: exprTypeMap critical for TBB safety, tracks LLVM Value* → Aria type
+- **Fat pointers**: 32 bytes in debug (ptr + base + size + alloc_id) for bounds checking
+- **Borrow checker**: Enforces Depth(H) ≤ Depth(A) invariant (Host outlives Appendage)
+- **Pinning**: Shadow Stack (1024 roots), prevents GC from moving pinned objects
+- **Safe reference ($)**: Creates checked borrow, validated by borrow checker
+- **Scope tracking**: scope_depth field in CodeGenContext for lifetime analysis
